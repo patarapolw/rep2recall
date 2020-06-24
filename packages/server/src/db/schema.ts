@@ -68,7 +68,7 @@ class DbDeck {
     try {
       item = await DbDeckModel.findOne(entry)
       if (!item) {
-        item = await DbDeckModel.create(entry)
+        item = await DbDeckModel.create(entry as any)
       }
     } catch (_) {
       item = await DbDeckModel.findOne(entry)
@@ -297,7 +297,7 @@ export class Db {
   static async signInOrCreate (email: string) {
     let user = await DbUserModel.findOne({ email })
     if (!user) {
-      user = await DbUserModel.create({ email })
+      user = await DbUserModel.create({ email } as any)
     }
 
     return user

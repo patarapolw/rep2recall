@@ -8,14 +8,14 @@ ARG VUE_APP_FIREBASE_CONFIG
 ARG VUE_APP_BASE_URL
 RUN npm run build
 
-FROM node:10-alpine
+FROM node:12-alpine
 RUN mkdir -p /server
 WORKDIR /server
-COPY packages/server/package.json /server/
-RUN npm i
+COPY packages/server/package.json packages/server/yarn.lock /server/
+RUN yarn
 COPY packages/server /server
-RUN npm run build
-RUN npm prune --production; exit 0
+RUN yarn build
+RUN yarn install --production --ignore-scripts --prefer-offline
 COPY --from=web /web/dist /server/public
 EXPOSE 8080
-CMD [ "npm", "start" ]
+CMD [ "yarn", "start" ]

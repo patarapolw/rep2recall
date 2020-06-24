@@ -14,7 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@typegoose/typegoose": "6.4.0",
+    "@typegoose/typegoose": "^6.4.0",
     "any-serialize": "^1.4.12",
     "dayjs": "^1.8.22",
     "dot-prop": "^5.2.0",
@@ -41,5 +41,10 @@
     "pino-pretty": "^3.6.1",
     "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.8.3"
+  },
+  "engines": {
+    "node": "12.x",
+    "npm": "please-use-yarn",
+    "yarn": "1.x"
   }
 }
