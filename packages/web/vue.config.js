@@ -3,6 +3,9 @@ const showdown = require('showdown')
 const { createIndentedFilter } = require('indent-utils')
 const pug = require('pug')
 
+process.env.VUE_APP_BASE_URL = process.env.BASE_URL
+process.env.VUE_APP_FIREBASE_CONFIG = process.env.FIREBASE_CONFIG
+
 const mdConverter = new showdown.Converter({
   simpleLineBreaks: true,
   emoji: true
