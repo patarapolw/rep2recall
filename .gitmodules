@@ -1,0 +1,3 @@
+[submodule "packages/g-server"]
+	path = packages/g-server
+	url = git@github.com:rep2recall/rep2recall-go.git
