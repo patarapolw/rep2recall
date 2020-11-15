@@ -37,7 +37,7 @@ data class QueryRequest(
 )
 
 data class NoteQueryResponse(
-        val result: List<NoteSer>,
+        val result: List<NotePartialSer>,
         val count: Long
 )
 
@@ -120,7 +120,7 @@ fun getSearchQuery(
 
             cond and QueryUtil.parse(q, listOf(":", "<", "<=", ">", ">=", "=", "~")) { p ->
                 when(p.key) {
-                    "key" -> QueryUtil.comp(p, NoteTable.key)
+                    "uid" -> QueryUtil.comp(p, NoteTable.uid)
                     "srsLevel" -> QueryUtil.comp(p, NoteTable.srsLevel)
                     "nextReview" -> QueryUtil.comp(p, NoteTable.nextReview)
                     "rightStreak" -> QueryUtil.comp(p, NoteTable.rightStreak)

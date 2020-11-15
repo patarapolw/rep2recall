@@ -30,7 +30,7 @@ object QuizController {
         transaction {
             ctx.json(QuizQueryResponse(
                     Note.wrapRows(getSearchQuery(ctx.sessionAttribute<String>("userId")!!,
-                            body.q, body.status, body.decks)).map { it.key }.shuffled()
+                            body.q, body.status, body.decks)).map { it.uid }.shuffled()
             ))
         }
     }
@@ -75,9 +75,9 @@ object QuizController {
             summary = "Mark a quiz item",
             description = "As right, wrong, or repeat",
             queryParams = [
-                OpenApiParam("key", String::class, required = true),
+                OpenApiParam("uid", String::class, required = true),
                 OpenApiParam("as", String::class, required = true,
-                    description = "right, wrong, or repeat")
+                        description = "right, wrong, or repeat")
             ],
             responses = [
                 OpenApiResponse("201", [OpenApiContent(StdSuccessResponse::class)]),
@@ -85,7 +85,7 @@ object QuizController {
             ]
     )
     private fun mark(ctx: Context) {
-        val key = ctx.queryParam<String>("key").get()
+        val uid = ctx.queryParam<String>("uid").get()
         val `as` = ctx.queryParam<String>("as")
                 .check({ setOf("right", "wrong", "repeat").contains(it) })
                 .get()
@@ -93,7 +93,7 @@ object QuizController {
         transaction {
             Note.find {
                 (NoteTable.userId eq ctx.sessionAttribute<String>("userId")) and
-                        (NoteTable.key eq key)
+                        (NoteTable.uid eq uid)
             }.firstOrNull()?.let {
                 when (`as`) {
                     "right" -> it.markRight()

@@ -24,12 +24,10 @@ object NoteController {
     @OpenApi(
             tags = ["note"],
             summary = "Get a Note",
-            description = "either id or key is required",
             queryParams = [
                 OpenApiParam("select", String::class, required = true,
-                    description = "Comma (,) separated fields"),
-                OpenApiParam("id", String::class),
-                OpenApiParam("key", String::class)
+                        description = "Comma (,) separated fields"),
+                OpenApiParam("uid", String::class, required = true)
             ],
             responses = [
                 OpenApiResponse("200", [OpenApiContent(NotePartialSer::class)]),
@@ -42,7 +40,10 @@ object NoteController {
                 .toSet()
 
         transaction {
-            _findOne(ctx)?.let {
+            Note.find {
+                NoteTable.userId eq ctx.sessionAttribute<String>("userId") and
+                        (NoteTable.uid eq ctx.queryParam<String>("uid").get())
+            }.firstOrNull()?.let {
                 ctx.json(it.filterKey(select))
             }
         } ?: ctx.status(400).json(StdErrorResponse("not found"))
@@ -52,7 +53,7 @@ object NoteController {
             tags = ["note"],
             summary = "Get a Note Attribute value",
             queryParams = [
-                OpenApiParam("key", String::class, required = true),
+                OpenApiParam("uid", String::class, required = true),
                 OpenApiParam("attr", String::class, required = true)
             ],
             responses = [
@@ -61,12 +62,12 @@ object NoteController {
             ]
     )
     private fun getAttr(ctx: Context) {
-        val key = ctx.queryParam<String>("key").get()
+        val uid = ctx.queryParam<String>("uid").get()
         val attr = ctx.queryParam<String>("attr").get()
 
         transaction {
             NoteAttrTable.innerJoin(NoteTable).select {
-                (NoteAttrTable.key eq attr) and (NoteTable.key eq key)
+                (NoteAttrTable.key eq attr) and (NoteTable.uid eq uid)
             }.firstOrNull()?.let {
                 ctx.json(StdSuccessResponse(
                         NoteAttr.wrapRow(it).value
@@ -75,10 +76,18 @@ object NoteController {
         } ?: ctx.status(400).json(StdErrorResponse("not found"))
     }
 
+    @OpenApi(
+            tags = ["note"],
+            summary = "Query for Notes",
+            requestBody = OpenApiRequestBody([OpenApiContent(QueryRequest::class)]),
+            responses = [
+                OpenApiResponse("200", [OpenApiContent(NoteQueryResponse::class)])
+            ]
+    )
     private fun query(ctx: Context) {
         val body = ctx.body<QueryRequest>()
 
-        var sortBy = body.sortBy ?: "id"
+        val sortBy = body.sortBy ?: "id"
         var desc = body.desc ?: false
 
         if (body.sortBy == null && body.desc == null) {
@@ -135,10 +144,8 @@ object NoteController {
     @OpenApi(
             tags = ["note"],
             summary = "Update a Note",
-            description = "either id or key is required",
             queryParams = [
-                OpenApiParam("id", String::class),
-                OpenApiParam("key", String::class)
+                OpenApiParam("uid", String::class, required = true)
             ],
             requestBody = OpenApiRequestBody([OpenApiContent(NotePartialSer::class)]),
             responses = [
@@ -150,7 +157,10 @@ object NoteController {
         val body = ctx.body<Map<String, Any>>()
 
         transaction {
-            _findOne(ctx)?.let { n ->
+            Note.find {
+                NoteTable.userId eq ctx.sessionAttribute<String>("userId") and
+                        (NoteTable.uid eq ctx.queryParam<String>("uid").get())
+            }.firstOrNull()?.let { n ->
                 n.updatedAt = DateTime.now()
 
                 body["nextReview"]?.let {
@@ -171,8 +181,8 @@ object NoteController {
                     } else DateTime.parse(gson.fromJson(gson.toJson(it)))
                 }
 
-                body["key"]?.let {
-                    n.key = gson.fromJson(gson.toJson(it))
+                body["uid"]?.let {
+                    n.uid = gson.fromJson(gson.toJson(it))
                 }
 
                 body["deck"]?.let {
@@ -262,10 +272,8 @@ object NoteController {
     @OpenApi(
             tags = ["note"],
             summary = "Delete a Note",
-            description = "either id or key is required",
             queryParams = [
-                OpenApiParam("id", String::class),
-                OpenApiParam("key", String::class)
+                OpenApiParam("uid", String::class, required = true)
             ],
             responses = [
                 OpenApiResponse("201", [OpenApiContent(StdSuccessResponse::class)]),
@@ -274,25 +282,14 @@ object NoteController {
     )
     private fun delete(ctx: Context) {
         transaction {
-            _findOne(ctx)?.let {
+            Note.find {
+                NoteTable.userId eq ctx.sessionAttribute<String>("userId") and
+                        (NoteTable.uid eq ctx.queryParam<String>("uid").get())
+            }.firstOrNull()?.let {
                 it.delete()
 
                 ctx.status(201).json(StdSuccessResponse("deleted"))
             }
         } ?: ctx.status(304).json(StdErrorResponse("not found"))
     }
-
-    @Suppress("FunctionName")
-    private fun _findOne(ctx: Context) = (
-            ctx.queryParam<String>("id").getOrNull()?.let {
-                Note.find {
-                    NoteTable.userId eq ctx.sessionAttribute<String>("userId") and
-                    (NoteTable.id eq it)
-                }
-            } ?: ctx.queryParam<String>("key").get().let {
-                Note.find {
-                    NoteTable.userId eq ctx.sessionAttribute<String>("userId") and
-                    (NoteTable.key eq it)
-                }
-            }).firstOrNull()
 }

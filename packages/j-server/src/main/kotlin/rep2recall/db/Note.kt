@@ -13,7 +13,7 @@ object NoteTable: InitTable("note") {
     val updatedAt = datetime("updated_at").nullable()
     val userId = reference("user_id", UserTable)
 
-    val key = text("key").index()
+    val uid = text("uid").index()
 
     val deck = text("deck").nullable().index()
     val front = text("front").nullable()
@@ -35,13 +35,13 @@ object NoteTable: InitTable("note") {
     val lastWrong = datetime("last_wrong").nullable().index()
 
     override fun init() {
-        uniqueIndex(userId, key)
+        uniqueIndex(userId, uid)
     }
 }
 
 object NoteTagTable: Table() {
-    val noteId = reference("note_id", NoteTable.id)
-    val tagId = reference("tag_id", TagTable.id)
+    private val noteId = reference("note_id", NoteTable.id)
+    private val tagId = reference("tag_id", TagTable.id)
 
     override val primaryKey = PrimaryKey(noteId, tagId)
 }
@@ -55,7 +55,7 @@ class Note(id: EntityID<String>): SerEntity(id) {
             val id = ULID.random()
             val note = new(id) {
                 this.userId = user.id
-                this.key = n.key ?: id
+                this.uid = n.uid ?: id
                 this.deck = n.deck
                 this.front = n.front
                 this.back = n.back
@@ -99,7 +99,7 @@ class Note(id: EntityID<String>): SerEntity(id) {
     var userId by NoteTable.userId
     val user by User referencedOn NoteTable.userId
 
-    var key by NoteTable.key
+    var uid by NoteTable.uid
 
     var deck by NoteTable.deck
     var front by NoteTable.front
@@ -174,7 +174,7 @@ class Note(id: EntityID<String>): SerEntity(id) {
             lastWrong = lastWrong?.toString(),
 
             id = id.value,
-            key = key,
+            uid = uid,
             deck = deck,
             front = front,
             back = back,
@@ -195,7 +195,7 @@ data class NoteSer(
         val lastWrong: String? = null,
 
         val id: String? = null,
-        val key: String? = null,
+        val uid: String? = null,
         val deck: String? = null,
         val front: String? = null,
         val back: String? = null,
