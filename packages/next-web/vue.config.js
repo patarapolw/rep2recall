@@ -1,3 +1,5 @@
+process.env.VUE_APP_FIREBASE_CONFIG = process.env.FIREBASE_CONFIG
+
 module.exports = {
   lintOnSave: false,
   transpileDependencies: ['vuetify'],

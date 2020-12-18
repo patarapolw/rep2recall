@@ -21,12 +21,14 @@ declare global {
 }
 
 async function main () {
-  if (window.FIREBASE_CONFIG && !window.FIREBASE_CONFIG.startsWith('{{')) {
-    firebase.initializeApp(JSON.parse(window.FIREBASE_CONFIG))
+  const firebaseConfig: string = process.env.VUE_APP_FIREBASE_CONFIG || window.FIREBASE_CONFIG
+
+  if (firebaseConfig && !firebaseConfig.startsWith('{{')) {
+    firebase.initializeApp(JSON.parse(firebaseConfig))
     firebase.analytics()
 
     let isFirebaseInit = false
-    await new Promise((resolve) => {
+    await new Promise<void>((resolve) => {
       firebase.auth().onAuthStateChanged(async (user) => {
         api.defaults.headers = api.defaults.headers || {}
         if (user) {
