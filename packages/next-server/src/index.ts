@@ -1,14 +1,11 @@
 import { execSync } from 'child_process'
-import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
 
-import fastify, { FastifyReply } from 'fastify'
+import fastify from 'fastify'
 import helmet from 'fastify-helmet'
 import fastifyStatic from 'fastify-static'
-import handlebars from 'handlebars'
 import mongoose from 'mongoose'
-import pointOfView from 'point-of-view'
 
 import apiRouter from './api'
 import { logger } from './logger'
@@ -28,25 +25,10 @@ async function main() {
   }
 
   const app = fastify({ logger })
-  const port = parseInt(process.env.PORT || '8080')
-  const jsNonce = crypto.randomBytes(64).toString('base64')
+  const port = parseInt(process.env.PORT || '36393')
 
   app.register(helmet, {
     contentSecurityPolicy: false
-  })
-  app.register(pointOfView, {
-    engine: { handlebars }
-  })
-
-  const renderTemplate = (reply: FastifyReply) => {
-    reply.view('./public/index.html', {
-      jsNonce,
-      firebaseConfig: process.env.FIREBASE_CONFIG || ''
-    })
-  }
-
-  app.get('/', (_, reply) => {
-    renderTemplate(reply)
   })
 
   app.register(fastifyStatic, {
@@ -56,7 +38,7 @@ async function main() {
   app.register(apiRouter, { prefix: '/api' })
 
   app.setNotFoundHandler((_, reply) => {
-    renderTemplate(reply)
+    reply.sendFile('index.html')
   })
 
   app.listen(

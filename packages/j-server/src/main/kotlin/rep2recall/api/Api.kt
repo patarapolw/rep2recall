@@ -41,41 +41,39 @@ object Api {
             RateLimit(ctx).requestPerTimeUnit(10, TimeUnit.SECONDS)
 
             ctx.header<String>("Authorization")
-                    .check({ it.startsWith("Basic ") })
                     .getOrNull()?.let { authString ->
-                        val u = String(Base64.getDecoder()
-                                .decode(authString.split(" ")[1])).split(':', limit = 2)
-                        ctx.sessionAttribute(
-                                "userId",
-                                transaction(Db.db) {
-                                    User.find {
-                                        (UserTable.apiKey eq u[1]) and (UserTable.email eq u[0])
-                                    }.firstOrNull()?.id?.value
-                                }
-                        )
-                        return@before
-                    }
-
-            ctx.header<String>("Authorization")
-                    .check({ it.startsWith("Bearer ") })
-                    .getOrNull()?.let { authString ->
-                        ctx.sessionAttribute(
-                                "userId",
-                                (firebaseApp?.let { firebaseApp ->
-                                    try {
-                                        val d = FirebaseAuth.getInstance(firebaseApp)
-                                                .verifyIdToken(authString.split(" ")[1])
-                                        transaction(Db.db) {
-                                            (User.find { UserTable.email eq d.email }.firstOrNull()
-                                                    ?: User.create(d.email, d.name, d.picture)).id.value
-                                        }
-                                    } catch (e: Error) {
-                                        ctx.status(401).result(e.message ?: "Unauthorized")
-                                        null
+                        if (authString.startsWith("Basic")) {
+                            val u = String(Base64.getDecoder()
+                                    .decode(authString.split(" ")[1])).split(':', limit = 2)
+                            ctx.sessionAttribute(
+                                    "userId",
+                                    transaction(Db.db) {
+                                        User.find {
+                                            (UserTable.apiKey eq u[1]) and (UserTable.email eq u[0])
+                                        }.firstOrNull()?.id?.value
                                     }
-                                })
-                        )
-                        return@before
+                            )
+                            return@before
+                        }
+                        if (authString.startsWith("Bearer")) {
+                            ctx.sessionAttribute(
+                                    "userId",
+                                    (firebaseApp?.let { firebaseApp ->
+                                        try {
+                                            val d = FirebaseAuth.getInstance(firebaseApp)
+                                                    .verifyIdToken(authString.split(" ")[1])
+                                            transaction(Db.db) {
+                                                (User.find { UserTable.email eq d.email }.firstOrNull()
+                                                        ?: User.create(d.email, d.name, d.picture)).id.value
+                                            }
+                                        } catch (e: Error) {
+                                            ctx.status(401).result(e.message ?: "Unauthorized")
+                                            null
+                                        }
+                                    })
+                            )
+                            return@before
+                        }
                     }
 
             if (System.getenv("DATABASE_URL").isNullOrEmpty()) {
@@ -87,6 +85,14 @@ object Api {
                             }.firstOrNull()?.id?.value
                         }
                 )
+            }
+        }
+
+        firebaseApp?.let {
+            get("firebase.config.js") { ctx ->
+                ctx.contentType("text/javascript").result("""
+                    FIREBASE_CONFIG = '${System.getenv("FIREBASE_CONFIG")}'
+                """.trimIndent())
             }
         }
 

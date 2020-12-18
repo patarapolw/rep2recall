@@ -88,7 +88,11 @@ const apiRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
   })
 
   f.addHook('preHandler', async (req, reply) => {
-    if (req.url && req.url.startsWith('/api/doc')) {
+    if (
+      req.url &&
+      (req.url.startsWith('/api/doc') ||
+        req.url.startsWith('/api/firebase.config.js'))
+    ) {
       return
     }
 
@@ -204,6 +208,14 @@ const apiRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
 
     reply.status(401).send({})
   })
+
+  if (isFirebase) {
+    f.get('/firebase.config.js', (_, reply) => {
+      reply
+        .type('text/javascript')
+        .send(`FIREBASE_CONFIG = '${process.env.FIREBASE_CONFIG}'`)
+    })
+  }
 
   f.register(noteRouter, { prefix: '/note' })
   f.register(presetRouter, { prefix: '/preset' })

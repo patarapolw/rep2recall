@@ -7,11 +7,16 @@
 
         <h2 class="mb-4">Features</h2>
         <center>
-          <img src="https://thumbs.gfycat.com/ChillyHospitableBison-size_restricted.gif" alt="screenshot">
+          <img
+            src="https://thumbs.gfycat.com/ChillyHospitableBison-size_restricted.gif"
+            alt="screenshot"
+            style="max-width: 100%"
+          />
         </center>
         <ul>
           <li>
-            Full range of JavaScript/CSS/HTML as supported by latest web browsers
+            Full range of JavaScript/CSS/HTML as supported by latest web
+            browsers
           </li>
           <li>
             Internally and externally linked
@@ -28,7 +33,6 @@
         </ul>
       </v-card-text>
     </v-card>
-
   </v-container>
 </template>
 

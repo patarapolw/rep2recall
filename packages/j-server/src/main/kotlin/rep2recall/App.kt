@@ -34,6 +34,7 @@ object App {
                             .reDoc(ReDocOptions("/doc")
                                     .title("Rep2recall API"))
                             .ignorePath("/", HttpMethod.GET)
+                            .ignorePath("/api/firebase.config.js", HttpMethod.GET)
             ))
 
             it.showJavalinBanner = false
@@ -47,9 +48,6 @@ object App {
                 it.enableCorsForAllOrigins()
             }
 
-//            it.addStaticFiles("/_media",
-//                    "/_media",
-//                    Location.CLASSPATH)
             it.addStaticFiles("/media",
                     Db.mediaPath.toAbsolutePath().toString(),
                     Location.EXTERNAL)
