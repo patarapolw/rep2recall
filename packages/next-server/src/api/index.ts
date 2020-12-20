@@ -2,14 +2,16 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 
+import { RequestContext } from '@mikro-orm/core'
+import axios from 'axios'
 import { FastifyInstance } from 'fastify'
 import fSession from 'fastify-secure-session'
 import swagger from 'fastify-swagger'
 import admin from 'firebase-admin'
 import { Ulid } from 'id128'
-import fetch from 'node-fetch'
 
 import { UserModel } from '../db/mongo'
+import { orm } from '../db/orm'
 import { ser } from '../shared'
 import noteRouter from './note'
 import presetRouter from './preset'
@@ -85,6 +87,10 @@ const apiRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
     },
     exposeRoute: true,
     routePrefix: '/doc'
+  })
+
+  f.addHook('preHandler', (_, __, next) => {
+    RequestContext.create(orm.em, next)
   })
 
   f.addHook('preHandler', async (req, reply) => {
@@ -181,7 +187,7 @@ const apiRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
               )
               fs.writeFileSync(
                 filePath,
-                await fetch(ticket.picture).then((r) => r.buffer())
+                await axios.get(ticket.picture).then((r) => r.data)
               )
 
               const [f] = await admin.storage().bucket().upload(filePath)

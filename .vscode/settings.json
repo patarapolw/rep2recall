@@ -1,0 +1,5 @@
+{
+  "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
+  "editor.formatOnSave": true,
+  "sort-imports.on-save": true
+}
