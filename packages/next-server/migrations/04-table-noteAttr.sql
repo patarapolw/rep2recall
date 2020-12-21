@@ -1,5 +1,5 @@
 CREATE TABLE "noteAttr" (
-  "noteId"      INT NOT NULL REFERENCES "note"("id"),
+  "noteId"      INT NOT NULL REFERENCES "note"("id") ON UPDATE RESTRICT ON DELETE CASCADE,
   "key"         TEXT NOT NULL,
   "value"       TEXT NOT NULL,
   "createdAt"   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

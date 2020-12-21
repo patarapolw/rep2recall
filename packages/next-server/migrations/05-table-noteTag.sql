@@ -1,5 +1,5 @@
 CREATE TABLE "noteTag" (
-  "noteId"    INT NOT NULL REFERENCES "note"("id"),
-  "tagId"     INT NOT NULL REFERENCES "tag"("id"),
+  "noteId"    INT NOT NULL REFERENCES "note"("id") ON UPDATE RESTRICT ON DELETE CASCADE,
+  "tagId"     INT NOT NULL REFERENCES "tag"("id") ON UPDATE RESTRICT ON DELETE CASCADE,
   PRIMARY KEY ("noteId", "tagId")
 );

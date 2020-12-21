@@ -2,16 +2,13 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 
-import { RequestContext } from '@mikro-orm/core'
 import axios from 'axios'
 import { FastifyInstance } from 'fastify'
 import fSession from 'fastify-secure-session'
 import swagger from 'fastify-swagger'
 import admin from 'firebase-admin'
-import { Ulid } from 'id128'
 
-import { UserModel } from '../db/mongo'
-import { orm } from '../db/orm'
+import { db } from '../db/pg'
 import { ser } from '../shared'
 import noteRouter from './note'
 import presetRouter from './preset'
@@ -89,10 +86,6 @@ const apiRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
     routePrefix: '/doc'
   })
 
-  f.addHook('preHandler', (_, __, next) => {
-    RequestContext.create(orm.em, next)
-  })
-
   f.addHook('preHandler', async (req, reply) => {
     if (
       req.url &&
@@ -103,21 +96,40 @@ const apiRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
     }
 
     let userId: string | undefined
+    const client = await db.db.connect()
 
     if (process.env.DEFAULT_USER) {
       const email = process.env.DEFAULT_USER
 
-      userId = await UserModel.findOne({ email })
-        .then(
-          (u) =>
-            u ||
-            UserModel.create({
-              email,
-              name: email.replace(/@.+$/, ''),
-              image: 'https://www.gravatar.com/avatar/0?d=mp'
-            })
+      userId = await client
+        .query(
+          /* sql */ `
+      SELECT "id" FROM "user" WHERE "email" = $1
+      `,
+          [email]
         )
-        .then((u) => u._id)
+        .then(async ({ rows: [u] }) => {
+          if (u) {
+            return u
+          }
+
+          const {
+            rows: [u1]
+          } = await client.query(
+            /* sql */ `
+            INSERT INTO "user" ("email", "name", "image")
+            VALUES ($1, $2, $3)
+            `,
+            [
+              email,
+              email.replace(/@.+$/, ''),
+              'https://www.gravatar.com/avatar/0?d=mp'
+            ]
+          )
+
+          return u1
+        })
+        .then((u) => u.id)
 
       req.session.set('userId', userId)
       return
@@ -143,10 +155,12 @@ const apiRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
         return false
       }
 
-      return UserModel.findOne({
-        email,
-        apiKey
-      }).then((u) => u?._id)
+      client.query(
+        /* sql */ `
+      SELECT "id" FROM "user" WHERE "email" = $1 AND "apiKey" = $2
+      `,
+        [email, apiKey]
+      )
     }
 
     const isBearer = async () => {
@@ -168,7 +182,13 @@ const apiRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
 
       if (ticket.email) {
         const email = ticket.email
-        return await UserModel.findOne({ email })
+        return await client
+          .query(
+            /* sql */ `
+      SELECT "id" FROM "user" WHERE "email" = $1
+      `,
+            [email]
+          )
           .then(async (u) => {
             if (u) {
               return u
@@ -183,7 +203,7 @@ const apiRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
 
               const filePath = path.join(
                 tmpDir,
-                Ulid.generate().toCanonical() + '.png'
+                Math.random().toString(36).substr(2) + '.png'
               )
               fs.writeFileSync(
                 filePath,
@@ -195,13 +215,19 @@ const apiRouter = (f: FastifyInstance, _: unknown, next: () => void) => {
               image = f.metadata.mediaLink
             }
 
-            return UserModel.create({
-              email,
-              name: ticket.name,
-              image
-            })
+            const {
+              rows: [u1]
+            } = await client.query(
+              /* sql */ `
+              INSERT INTO "user" ("email", "name", "image")
+              VALUES ($1, $2, $3)
+              `,
+              [email, ticket.name, image]
+            )
+
+            return u1
           })
-          .then((u) => u._id as string)
+          .then((u) => u.id as string)
       }
     }
 
