@@ -4,9 +4,10 @@ import { Entity, PrimaryKey, Property } from '@mikro-orm/core'
 
 @Entity()
 export class User {
+  // Requires enabling the module via: create extension "uuid-ossp";
   @PrimaryKey({
     columnType: 'uuid',
-    defaultRaw: 'gen_random_uuid()'
+    defaultRaw: 'uuid_generate_v4()'
   })
   id!: string
 
@@ -25,10 +26,19 @@ export class User {
   apiKey: string = User.newApiKey()
 
   @Property()
-  createdAt: Date = new Date();
+  createdAt: Date = new Date()
 
-  @Property({ onUpdate: () => new Date(), nullable: true })
-  updatedAt!: Date | null
+  @Property({
+    onUpdate: () => new Date(),
+    nullable: true
+  })
+  updatedAt?: Date
+
+  constructor(it: { email: string; name: string; image: string }) {
+    this.email = it.email
+    this.name = it.name
+    this.image = it.image
+  }
 
   static newApiKey() {
     return crypto.randomBytes(64).toString('base64').replace(/=+$/, '')
