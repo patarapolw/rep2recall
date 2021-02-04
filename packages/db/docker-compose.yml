@@ -1,0 +1,18 @@
+version: '3'
+services:
+  db:
+    build: .
+    image: cj_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgress
+      - POSTGRES_DB=postgres
+      - TZ=Asia/Bangkok
+      - PGTZ=Asia/Bangkok
+      - BACKUP_CRON="0 0 * * *"
+    ports:
+      - '5433:5432'
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./backups:/backups
+      - ./initdb.d:/docker-entrypoint-initdb.d

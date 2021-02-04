@@ -1,0 +1,16 @@
+{
+  "name": "@rep2recall/db",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Pacharapol Withayasakpunt <polv@polv.cc> (https://www.polv.cc/)",
+  "license": "MIT",
+  "dependencies": {
+    "eta": "^1.12.1",
+    "fast-glob": "^3.2.5",
+    "jsonschema-definer": "^1.3.2",
+    "pg": "^8.5.1"
+  },
+  "devDependencies": {
+    "prettier": "^2.2.1"
+  }
+}

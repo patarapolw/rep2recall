@@ -1,0 +1,11 @@
+# Ignore everything
+**
+
+# Allow files and directories
+!/backup.sh
+!/entrypoint.sh
+!/initdb.d/
+
+!/src/
+!/package-lock.json
+!/package.json
