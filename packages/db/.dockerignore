@@ -4,7 +4,9 @@
 # Allow files and directories
 !/backup.sh
 !/entrypoint.sh
+
 !/initdb.d/
+/initdb.d/*.t.sql
 
 !/src/
 !/package-lock.json

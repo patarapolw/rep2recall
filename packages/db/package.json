@@ -5,7 +5,7 @@
   "author": "Pacharapol Withayasakpunt <polv@polv.cc> (https://www.polv.cc/)",
   "license": "MIT",
   "dependencies": {
-    "eta": "^1.12.1",
+    "ejs": "^3.1.5",
     "fast-glob": "^3.2.5",
     "jsonschema-definer": "^1.3.2",
     "pg": "^8.5.1"

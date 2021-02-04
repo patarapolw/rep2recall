@@ -1,9 +1,9 @@
 // @ts-check
 const fs = require('fs')
-const eta = require('eta')
+const ejs = require('ejs')
 const S = require('jsonschema-definer').default
 
-const s = eta.render(/* sql */ `
+const s = ejs.render(/* sql */ `
 CREATE TABLE "user" (
   "id"              UUID NOT NULL DEFAULT uuid_generate_v1(),
   "createdAt"       TIMESTAMPTZ DEFAULT now(),
@@ -30,4 +30,4 @@ VALUES ('Default', '');
   }).valueOf()
 })
 
-fs.writeFileSync('initdb.d/01-user.t.sql', /** @type {string} */ (s))
+fs.writeFileSync('./initdb.d/01-user.t.sql', s)

@@ -1,9 +1,11 @@
-# Based on debian-slim
+# Based on debian:buster-slim
 FROM postgres:12
 
 RUN mkdir -p /app
 RUN apt-get update
-RUN apt-get install -y wget git build-essential cron node
+RUN apt-get install -y wget git build-essential cron
+RUN wget --quiet -O - https://deb.nodesource.com/setup_lts.x | bash -
+RUN apt-get install -y nodejs
 
 # pgroonga extension
 # Does not officially support alpine
@@ -22,10 +24,14 @@ RUN cd postgres-json-schema && make install
 
 # Install cron backup engine
 RUN mkdir /etc/crontab.d
+
+# Scripts
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
+RUN node ./src/01-user.t.sql.js
+RUN cp ./initdb.d/*.sql /docker-entrypoint-initdb.d/
 RUN npm ci --production
 
 ENTRYPOINT ["/bin/bash", "-e", "/app/entrypoint.sh"]
